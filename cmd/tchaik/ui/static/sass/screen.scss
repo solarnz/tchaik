@@ -160,24 +160,49 @@ div#header {
       }
     }
 
-    & > span.bar {
-      background-color: $light-blue;
+    & > div.container {
+      position: relative;
 
-      width: 4px;
-      margin-left: 19px;
-      display: block;
+      & > input.bar {
+        // These are magic numbers, and I don't like them
+        bottom: 42px;
+        left: -31px;
+        opacity: 0;
+        position: absolute;
+        transform: rotate(270deg);
+        width: 100px;
 
-      & > span.current {
-        width: 4px;
-        display: block;
-        background-color: #444;
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+        }
+
+        &::-webkit-slider-runnable-track {
+          cursor: pointer;
+        }
       }
 
-      & > span.marker {
-        width: 12px;
-        margin-left: -4px;
+      & > span.bar {
+        pointer-events: none;
+        background-color: $light-blue;
+
+        width: 4px;
+        margin-left: 19px;
         display: block;
-        background-color: #ddd;
+
+        & > span.current {
+          pointer-events: none;
+          width: 4px;
+          display: block;
+          background-color: #444;
+        }
+
+        & > span.marker {
+          pointer-events: none;
+          width: 12px;
+          margin-left: -4px;
+          display: block;
+          background-color: #ddd;
+        }
       }
     }
   }

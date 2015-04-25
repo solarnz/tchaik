@@ -168,10 +168,13 @@ var Volume = React.createClass({
     var h = this.props.height - parseInt(volume * this.props.height);
     return (
       <div className="volume" onWheel={this._onWheel} >
-        <span className="bar" onMouseOver={this._onMouseOver} onMouseDown={this._onMouseDown} style={{height: this.props.height}}>
-          <span className="current" style={{height: h}} />
-          <span className="marker" style={{height: this.props.markerHeight}} />
-        </span>
+        <div className="container" style={{height: this.props.height}}>
+            <input type="range" className="hidden bar" min="0" max="1" value={volume} step="0.01" onInput={this._onInputChange} />
+            <span className="bar" onMouseOver={this._onMouseOver} onMouseDown={this._onMouseDown} style={{height: this.props.height}}>
+                <span className="current" style={{height: h}} />
+                <span className="marker" style={{height: this.props.markerHeight}} />
+            </span>
+        </div>
         <Icon icon={'volume-' + classSuffix} onMouseDown={this._toggleMute} />
       </div>
     );
@@ -193,10 +196,9 @@ var Volume = React.createClass({
     NowPlayingActions.volume(v);
   },
 
-  _onMouseDown: function(evt) {
-    var pos = evt.pageY - _getOffsetTop(evt.currentTarget);
-    var height = evt.currentTarget.offsetHeight;
-    NowPlayingActions.volume(1 - pos/height);
+  _onInputChange: function(evt) {
+    var nativeEvent = evt.nativeEvent;
+    NowPlayingActions.volume(nativeEvent.target.value);
   },
 
   _onChange: function() {
