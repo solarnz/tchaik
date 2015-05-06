@@ -45,3 +45,43 @@ Now you can start Tchaik.  For the moment this means first moving to the cmd/tch
     Building search index...done.
     Web server is running on http://localhost:8080
     Quit the server with CTRL-C.
+
+# Running tchaik
+
+## Building your library
+
+Tchaik can import your itunes collection. You just need to specify an XML file to process.
+
+    $ tchimport -itlXML ~/path/to/iTunesLibrary.xml -out library.tch
+
+Or, if you would rather Tchaik build your collection from metadata tags from files on your file system,
+
+    $ tchimport -path ~/Music -out library.tch
+
+## Starting tchaik
+
+To start with a prebuilt library file, run
+
+    $ tchaik -lib libraray.tch
+
+Or if you would like to import the iTunes library on startup, run
+
+    $ tchaik -itlXML ~/path/to/iTunesLibrary.xml
+
+There are many other ways you can run tchaik.
+
+    $ tchaik -help
+    Usage of tchaik:
+      -add-path-prefix="": add prefix to every path
+      -artwork-cache="": path to local artwork cache (content addressable)
+      -auth=false: use basic HTTP authentication
+      -debug=false: print debugging information
+      -itlXML="": path to iTunes Library XML file
+      -lib="": path to Tchaik library file
+      -listen="localhost:8080": bind address to http listen
+      -local-store="/": local media store, full local path /path/to/root
+      -media-cache="": path to local media cache
+      -remote-store="": remote media store, tchstore server address <hostname>:<port>, or s3://<bucket>/path/to/root for S3
+      -tls-cert="": path to a certificate file, must also specify -tls-key
+      -tls-key="": path to a certificate key file, must also specify -tls-cert
+      -trim-path-prefix="": remove prefix from every path
