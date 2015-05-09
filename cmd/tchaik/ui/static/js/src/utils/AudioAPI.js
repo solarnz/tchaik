@@ -8,60 +8,76 @@ var PlayingStatusStore = require('../stores/PlayingStatusStore.js');
 
 var VolumeStore = require('../stores/VolumeStore.js');
 
-var _audio = new Audio();
-var _src = null;
-var _playing = false;
+class AudioController {
+  constructor() {
+    this._audio = new Audio();
+    this._src = null;
+    this._playing = false;
+  }
 
-function buffered() {
-  return _audio.buffered;
+  buffered() {
+    return this._audio.buffered;
+  }
+
+  playing() {
+    return this._playing;
+  }
+
+  play() {
+    this._audio.play();
+    this._playing = true;
+  }
+
+  pause() {
+    this._audio.pause();
+    this._playing = false;
+  }
+
+  load() {
+    this._audio.load();
+  }
+
+  src() {
+    return this._src;
+  }
+
+  setSrc(l) {
+    this._src = l;
+    this._audio.src = l;
+  }
+
+  setCurrentTime(t) {
+    this._audio.currentTime = t;
+  }
+
+  currentTime() {
+    return this._audio.currentTime;
+  }
+
+  setVolume(v) {
+    this._audio.volume = v;
+  }
+
+  volume() {
+    return this._audio.volume;
+  }
+
+  duration() {
+    return this._audio.duration;
+  }
+
+  addEventListener(...args) {
+    return this._audio.addEventListener.apply(this._audio, args);
+  }
 }
 
-function play() {
-  _audio.play();
-}
-
-function pause() {
-  _audio.pause();
-}
-
-function load() {
-  _audio.load();
-}
-
-function src() {
-  return _src;
-}
-
-function setSrc(l) {
-  _audio.src = l;
-  _src = l;
-}
-
-function setCurrentTime(t) {
-  _audio.currentTime = t;
-}
-
-function currentTime() {
-  return _audio.currentTime;
-}
-
-function setVolume(t) {
-  _audio.volume = t;
-}
-
-function volume() {
-  return _audio.volume;
-}
-
-function duration() {
-  return _audio.duration;
-}
+var currentAudio = new AudioController();
 
 function init() {
   var playerEvents = ['error', 'progress', 'play', 'pause', 'ended',
     'timeupdate', 'loadedmetadata', 'loadstart'];
   playerEvents.forEach(function(eventName) {
-    _audio.addEventListener(eventName, onPlayerEvent);
+    currentAudio.addEventListener(eventName, onPlayerEvent);
   });
 
   NowPlayingStore.addChangeListener(update);
@@ -80,7 +96,7 @@ function onPlayerEvent(evt) {
     break;
 
   case "progress":
-    var range = buffered();
+    var range = currentAudio.buffered();
     if (range.length > 0) {
       NowPlayingActions.setBuffered(range.end(range.length-1));
     }
@@ -99,16 +115,14 @@ function onPlayerEvent(evt) {
     break;
 
   case "timeupdate":
-    NowPlayingActions.currentTime(currentTime());
+    NowPlayingActions.currentTime(currentAudio.currentTime());
     break;
 
   case "loadedmetadata":
-    NowPlayingActions.setDuration(duration());
+    NowPlayingActions.setDuration(currentAudio.duration());
 
-    setCurrentTime(PlayingStatusStore.getTime());
-    if (_playing) {
-      play();
-    }
+    currentAudio.setCurrentTime(PlayingStatusStore.getTime());
+    currentAudio.play();
     break;
 
   case "loadstart":
@@ -124,7 +138,7 @@ function onPlayerEvent(evt) {
 
 function _onNowPlayingControl(type, value) {
   if (type === NowPlayingConstants.SET_CURRENT_TIME) {
-    setCurrentTime(value);
+    currentAudio.setCurrentTime(value);
   }
 }
 
@@ -132,31 +146,31 @@ function update() {
   var track = NowPlayingStore.getTrack();
   if (track) {
     var source = "/track/"+track.TrackID;
-    var orig = src();
+    var orig = currentAudio.src();
     if (orig !== source) {
-      setSrc(source);
-      load();
+      currentAudio.setSrc(source);
+      currentAudio.load();
       if (orig !== null) {
-        play();
+        currentAudio.play();
       }
     }
   }
 
-  var prevPlaying = _playing;
-  _playing = NowPlayingStore.getPlaying();
-  if (prevPlaying !== _playing) {
-    if (_playing) {
-      play();
+  var prevPlaying = currentAudio.playing();
+  var nowPlaying = NowPlayingStore.getPlaying();
+  if (prevPlaying !== nowPlaying) {
+    if (nowPlaying) {
+      currentAudio.play();
     } else {
-      pause();
+      currentAudio.pause();
     }
   }
 }
 
 function _onVolumeChange() {
   var v = VolumeStore.getVolume();
-  if (volume() !== v) {
-    setVolume(v);
+  if (currentAudio.volume() !== v) {
+    currentAudio.setVolume(v);
   }
 }
 
