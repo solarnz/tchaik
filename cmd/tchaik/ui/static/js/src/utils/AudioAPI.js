@@ -58,14 +58,11 @@ function duration() {
 }
 
 function init() {
-  _audio.addEventListener('error', onPlayerEvent);
-  _audio.addEventListener('progress', onPlayerEvent);
-  _audio.addEventListener('play', onPlayerEvent);
-  _audio.addEventListener('pause', onPlayerEvent);
-  _audio.addEventListener('ended', onPlayerEvent);
-  _audio.addEventListener('timeupdate', onPlayerEvent);
-  _audio.addEventListener('loadedmetadata', onPlayerEvent);
-  _audio.addEventListener('loadstart', onPlayerEvent);
+  var playerEvents = ['error', 'progress', 'play', 'pause', 'ended',
+    'timeupdate', 'loadedmetadata', 'loadstart'];
+  playerEvents.forEach(function(eventName) {
+    _audio.addEventListener(eventName, onPlayerEvent);
+  });
 
   NowPlayingStore.addChangeListener(update);
   NowPlayingStore.addControlListener(_onNowPlayingControl);
