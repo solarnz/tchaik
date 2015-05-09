@@ -13,6 +13,15 @@ class AudioController {
     this._audio = new Audio();
     this._src = null;
     this._playing = false;
+
+    this._audio.addEventListener('error', this.onPlayerError);
+    this._audio.addEventListener('progress', this.onPlayerProgress);
+    this._audio.addEventListener('play', this.onPlayerPlay);
+    this._audio.addEventListener('pause', this.onPlayerPause);
+    this._audio.addEventListener('ended', this.onPlayerEnded);
+    this._audio.addEventListener('timeupdate', this.onPlayerTimeupdate);
+    this._audio.addEventListener('loadedmetadata', this.onPlayerLoadedmetadata);
+    this._audio.addEventListener('loadstart', this.onPlayerLoadstart);
   }
 
   buffered() {
@@ -69,69 +78,55 @@ class AudioController {
   addEventListener(...args) {
     return this._audio.addEventListener.apply(this._audio, args);
   }
+
+  onPlayerError(evt) {
+    console.error("Error received from Audio component:", evt);
+  }
+
+  onPlayerProgress(evt) {
+    var range = currentAudio.buffered();
+    if (range.length > 0) {
+      NowPlayingActions.setBuffered(range.end(range.length-1));
+    }
+  }
+
+  onPlayerPlay(evt) {
+    NowPlayingActions.playing(true);
+  }
+
+  onPlayerPause(evt) {
+    NowPlayingActions.playing(false);
+  }
+
+  onPlayerEnded(evt) {
+    NowPlayingActions.ended(NowPlayingStore.getSource());
+  }
+
+  onPlayerTimeupdate(evt) {
+    NowPlayingActions.currentTime(currentAudio.currentTime());
+  }
+
+  onPlayerLoadedmetadata(evt) {
+    NowPlayingActions.setDuration(currentAudio.duration());
+
+    currentAudio.setCurrentTime(PlayingStatusStore.getTime());
+    currentAudio.play();
+  }
+
+  onPLayerLoadstart(evt) {
+    NowPlayingActions.reset();
+  }
 }
 
 var currentAudio = new AudioController();
 
 function init() {
-  var playerEvents = ['error', 'progress', 'play', 'pause', 'ended',
-    'timeupdate', 'loadedmetadata', 'loadstart'];
-  playerEvents.forEach(function(eventName) {
-    currentAudio.addEventListener(eventName, onPlayerEvent);
-  });
-
   NowPlayingStore.addChangeListener(update);
   NowPlayingStore.addControlListener(_onNowPlayingControl);
   VolumeStore.addChangeListener(_onVolumeChange);
 
   update();
   _onVolumeChange();
-}
-
-function onPlayerEvent(evt) {
-  switch (evt.type) {
-  case "error":
-    console.error("Error received from Audio component:", evt);
-    break;
-
-  case "progress":
-    var range = currentAudio.buffered();
-    if (range.length > 0) {
-      NowPlayingActions.setBuffered(range.end(range.length-1));
-    }
-    break;
-
-  case "play":
-    NowPlayingActions.playing(true);
-    break;
-
-  case "pause":
-    NowPlayingActions.playing(false);
-    break;
-
-  case "ended":
-    NowPlayingActions.ended(NowPlayingStore.getSource());
-    break;
-
-  case "timeupdate":
-    NowPlayingActions.currentTime(currentAudio.currentTime());
-    break;
-
-  case "loadedmetadata":
-    NowPlayingActions.setDuration(currentAudio.duration());
-
-    currentAudio.setCurrentTime(PlayingStatusStore.getTime());
-    currentAudio.play();
-    break;
-
-  case "loadstart":
-    NowPlayingActions.reset();
-    break;
-
-  default:
-    console.warn("unhandled player event:", evt);
-    break;
-  }
 }
 
 function _onNowPlayingControl(type, value) {
