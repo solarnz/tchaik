@@ -91,8 +91,7 @@ function init() {
 function onPlayerEvent(evt) {
   switch (evt.type) {
   case "error":
-    console.log("Error received from Audio component:");
-    console.error(evt);
+    console.error("Error received from Audio component:", evt);
     break;
 
   case "progress":
@@ -130,8 +129,7 @@ function onPlayerEvent(evt) {
     break;
 
   default:
-    console.warn("unhandled player event:");
-    console.warn(evt);
+    console.warn("unhandled player event:", evt);
     break;
   }
 }
