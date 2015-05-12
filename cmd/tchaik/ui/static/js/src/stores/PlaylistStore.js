@@ -332,63 +332,76 @@ class Playlist {
 
 var playlist = new Playlist();
 
-var PlaylistStore = assign({}, EventEmitter.prototype, {
+class PlaylistStore extends EventEmitter {
+  constructor() {
+    super();
+    this.dispatchToken = AppDispatcher.register(this.handleDispatch.bind(this));
+  }
 
-  getPlaylist: function() {
+  getPlaylist() {
     return playlist.getPlaylistItems();
-  },
+  }
 
-  getCurrent: function() {
+  getCurrent() {
     return playlist.getPlaylistCurrent();
-  },
+  }
 
-  getCurrentTrack: function() {
+  getCurrentTrack() {
     return playlist.currentTrack();
-  },
+  }
 
-  canPrev: function() {
+  canPrev() {
     return playlist.canPrev();
-  },
+  }
 
-  canNext: function() {
+  canNext() {
     return playlist.canNext();
-  },
+  }
 
-  getNext: function() {
+  getNext() {
     return playlist.getNext();
-  },
+  }
 
-  getItemKeys: function(index, path) {
+  getItemKeys(index, path) {
     var item = playlist.getPlaylistItem(index);
     var key = CollectionStore.pathToKey(path);
     return item.data[key];
-  },
+  }
 
-  emitChange: function() {
+  emitChange() {
     this.emit(CHANGE_EVENT);
-  },
+  }
 
   /**
    * @param {function} callback
    */
-  addChangeListener: function(callback) {
+  addChangeListener(callback) {
     this.on(CHANGE_EVENT, callback);
-  },
+  }
 
   /**
    * @param {function} callback
    */
-  removeChangeListener: function(callback) {
+  removeChangeListener(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   }
 
-});
+  handleDispatch(payload) {
+    var action = payload.action;
+    var source = payload.source;
 
-PlaylistStore.dispatchToken = AppDispatcher.register(function(payload) {
-  var action = payload.action;
-  var source = payload.source;
+    if (source === 'SERVER_ACTION') {
+      this.handleServerAction(action, payload);
+    }
 
-  if (source === 'SERVER_ACTION') {
+    if (source === 'VIEW_ACTION') {
+      this.handleViewAction(action, payload);
+    }
+
+    return true;
+  }
+
+  handleServerAction(action, payload) {
     if (action.actionType === ControlConstants.CTRL) {
       switch (action.data) {
         case ControlConstants.NEXT:
@@ -404,7 +417,7 @@ PlaylistStore.dispatchToken = AppDispatcher.register(function(payload) {
     }
   }
 
-  if (source === 'VIEW_ACTION') {
+  handleViewAction(action, payload) {
     var items;
     switch (action.actionType) {
 
@@ -452,8 +465,6 @@ PlaylistStore.dispatchToken = AppDispatcher.register(function(payload) {
         break;
     }
   }
+}
 
-  return true;
-});
-
-module.exports = PlaylistStore;
+module.exports = new PlaylistStore();
