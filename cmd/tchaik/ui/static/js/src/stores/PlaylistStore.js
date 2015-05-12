@@ -427,24 +427,24 @@ class PlaylistStore extends EventEmitter {
         /* falls through */
       case PlaylistConstants.NEXT:
         playlist.next();
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       case PlaylistConstants.PREV:
         playlist.prev();
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       case PlaylistConstants.REMOVE:
         playlist.remove(action.itemIndex, action.path);
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       case CollectionConstants.APPEND_TO_PLAYLIST:
         items = playlist.getPlaylistItems();
         items.push(buildPlaylistItem(action.path));
         playlist.setPlaylistItems(items);
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       case CollectionConstants.PLAY_NOW:
@@ -452,12 +452,12 @@ class PlaylistStore extends EventEmitter {
         items.unshift(buildPlaylistItem(action.path));
         playlist.setPlaylistItems(items);
         playlist.reset();
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       case PlaylistConstants.PLAY_ITEM:
         playlist.setCurrent(action.itemIndex, action.path);
-        PlaylistStore.emitChange();
+        this.emitChange();
         break;
 
       default:
