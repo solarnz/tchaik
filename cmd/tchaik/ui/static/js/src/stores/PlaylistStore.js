@@ -13,48 +13,6 @@ var ControlConstants = require('../constants/ControlConstants.js');
 
 var CHANGE_EVENT = 'change';
 
-var _playlistItems = null;
-var _playlistCurrent = null;
-
-function setPlaylistItems(items) {
-  _playlistItems = items;
-  localStorage.setItem("playlistItems", JSON.stringify(items));
-}
-
-function getPlaylistItems() {
-  if (_playlistItems === null) {
-    var items = localStorage.getItem("playlistItems");
-    if (items === null) {
-      _playlistItems = [];
-    } else {
-      _playlistItems = JSON.parse(items);
-    }
-  }
-  return _playlistItems;
-}
-
-function getPlaylistItem(itemIndex) {
-  var playlistItems = getPlaylistItems();
-  return playlistItems[itemIndex];
-}
-
-function setPlaylistCurrent(current) {
-  _playlistCurrent = current;
-  localStorage.setItem("playlistCurrent", JSON.stringify(current));
-}
-
-function getPlaylistCurrent() {
-  if (_playlistCurrent !== null) {
-    return _playlistCurrent;
-  }
-  var current = localStorage.getItem("playlistCurrent");
-  if (current === null) {
-    return null;
-  }
-  _playlistCurrent = JSON.parse(current);
-  return _playlistCurrent;
-}
-
 function buildPlaylistItem(root) {
   var queue = [[]];
   var tracks = [];
@@ -107,253 +65,301 @@ function buildPlaylistItem(root) {
   };
 }
 
-function reset() {
-  var item = getPlaylistItem(0);
-  var current = null;
-  if (item !== null) {
-    current = {
-      item: 0,
-      track: 0,
-      path: item.root.concat(item.tracks[0]),
-    };
-  }
-  setPlaylistCurrent(current);
-}
-
-function next() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    reset();
-    return;
+class Playlist {
+  constructor() {
+    this._playlistItems = null;
+    this._playlistCurrent = null;
   }
 
-  var items = getPlaylistItems();
-  var item = items[current.item];
-  var tracks = item.tracks;
-
-  if (current.track + 1 < tracks.length) {
-    current.path = item.root.concat(tracks[++current.track]);
-    setPlaylistCurrent(current);
-    return;
+  setPlaylistItems(items) {
+    this._playlistItems = items;
+    localStorage.setItem("playlistItems", JSON.stringify(items));
   }
 
-  if (current.item + 1 < items.length) {
-    item = items[++current.item];
-    current.track = 0;
-    current.path = item.root.concat(item.tracks[0]);
-    setPlaylistCurrent(current);
-    return;
+  getPlaylistItems() {
+    if (this._playlistItems === null) {
+      var items = localStorage.getItem("playlistItems");
+      if (items === null) {
+        this._playlistItems = [];
+      } else {
+        this._playlistItems = JSON.parse(items);
+      }
+    }
+    return this._playlistItems;
   }
 
-  // Overflow - at the end - must be last item.
-  setPlaylistCurrent(null);
-}
-
-function prev() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    reset();
-    return;
+  getPlaylistItem(itemIndex) {
+    var playlistItems = this.getPlaylistItems();
+    return playlistItems[itemIndex];
   }
 
-  var item = getPlaylistItem(current.item);
-  var tracks = item.tracks;
-  if (current.track > 0) {
-    current.path = item.root.concat(tracks[--current.track]);
-    setPlaylistCurrent(current);
-    return;
+  setPlaylistCurrent(current) {
+    this._playlistCurrent = current;
+    localStorage.setItem("playlistCurrent", JSON.stringify(current));
   }
 
-  if (current.item > 0) {
-    item = getPlaylistItem(--current.item);
-    current.track = item.tracks.length-1;
-    current.path = item.root.concat(item.tracks[current.track]);
-    setPlaylistCurrent(current);
-    return;
-  }
-}
-
-function canPrev() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    return false;
-  }
-  return (current.track > 0) || (current.item > 0);
-}
-
-function canNext() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    return false;
+  getPlaylistCurrent() {
+    if (this._playlistCurrent !== null) {
+      return this._playlistCurrent;
+    }
+    var current = localStorage.getItem("playlistCurrent");
+    if (current === null) {
+      return null;
+    }
+    this._playlistCurrent = JSON.parse(current);
+    return this._playlistCurrent;
   }
 
-  var items = getPlaylistItems();
-  var tracks = items[current.item].tracks;
-  return (current.track < (tracks.length - 1)) || (current.item < (items.length-1));
-}
-
-function getNext() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    return null;
+  reset() {
+    var item = this.getPlaylistItem(0);
+    var current = null;
+    if (item !== null) {
+      current = {
+        item: 0,
+        track: 0,
+        path: item.root.concat(item.tracks[0]),
+      };
+    }
+    this.setPlaylistCurrent(current);
   }
 
-  var item = getPlaylistItem(current.item);
-  var tracks = item.tracks;
-  if (current.track < (tracks.length - 1)) {
-    return trackForPath(item.root.concat(tracks[current.track+1]));
-  }
-  return null;
-}
+  next() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
+      this.reset();
+      return;
+    }
 
-function remove(itemIndex, path) {
-  function _isPathPrefix(path, prefix) {
-    if (prefix.length > path.length) {
+    var items = this.getPlaylistItems();
+    var item = items[current.item];
+    var tracks = item.tracks;
+
+    if (current.track + 1 < tracks.length) {
+      current.path = item.root.concat(tracks[++current.track]);
+      this.setPlaylistCurrent(current);
+      return;
+    }
+
+    if (current.item + 1 < items.length) {
+      item = items[++current.item];
+      current.track = 0;
+      current.path = item.root.concat(item.tracks[0]);
+      this.setPlaylistCurrent(current);
+      return;
+    }
+
+    // Overflow - at the end - must be last item.
+    this.setPlaylistCurrent(null);
+  }
+
+  prev() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
+      this.reset();
+      return;
+    }
+
+    var item = this.getPlaylistItem(current.item);
+    var tracks = item.tracks;
+    if (current.track > 0) {
+      current.path = item.root.concat(tracks[--current.track]);
+      this.setPlaylistCurrent(current);
+      return;
+    }
+
+    if (current.item > 0) {
+      item = this.getPlaylistItem(--current.item);
+      current.track = item.tracks.length-1;
+      current.path = item.root.concat(item.tracks[current.track]);
+      this.setPlaylistCurrent(current);
+      return;
+    }
+  }
+
+  canPrev() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
       return false;
     }
-    for (var i = 0; i < prefix.length; i++) {
-      if (path[i] != prefix[i]) {
+    return (current.track > 0) || (current.item > 0);
+  }
+
+  canNext() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
+      return false;
+    }
+
+    var items = this.getPlaylistItems();
+    var tracks = items[current.item].tracks;
+    return (current.track < (tracks.length - 1)) || (current.item < (items.length-1));
+  }
+
+  getNext() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
+      return null;
+    }
+
+    var item = this.getPlaylistItem(current.item);
+    var tracks = item.tracks;
+    if (current.track < (tracks.length - 1)) {
+      return this.trackForPath(item.root.concat(tracks[current.track+1]));
+    }
+    return null;
+  }
+
+  remove(itemIndex, path) {
+    function _isPathPrefix(path, prefix) {
+      if (prefix.length > path.length) {
         return false;
       }
-    }
-    return true;
-  }
-
-  function _pathsEqual(p1, p2) {
-    return (p1.length == p2.length) && _isPathPrefix(p1, p2);
-  }
-
-  function _removeTracks(tracks, path) {
-    var i = 0;
-    while (i < tracks.length) {
-      if (_isPathPrefix(tracks[i], path)) {
-        tracks.splice(i, 1);
-        continue;
+      for (var i = 0; i < prefix.length; i++) {
+        if (path[i] != prefix[i]) {
+          return false;
+        }
       }
-      i++;
+      return true;
     }
-  }
 
-  function _removePaths(paths, data, path) {
-    var i = 0;
-    while (i < paths.length) {
-      if (_isPathPrefix(paths[i], path)) {
-        delete data[CollectionStore.pathToKey(paths[i])];
-        paths.splice(i, 1);
-        continue;
+    function _pathsEqual(p1, p2) {
+      return (p1.length == p2.length) && _isPathPrefix(p1, p2);
+    }
+
+    function _removeTracks(tracks, path) {
+      var i = 0;
+      while (i < tracks.length) {
+        if (_isPathPrefix(tracks[i], path)) {
+          tracks.splice(i, 1);
+          continue;
+        }
+        i++;
       }
-      i++;
-    }
-  }
-
-  function _removeItem(items, itemIndex) {
-    items.splice(itemIndex, 1);
-  }
-
-  var items = getPlaylistItems();
-  var item = items[itemIndex];
-
-  var data;
-  do {
-    if (_pathsEqual(path, item.root)) {
-      _removeItem(items, itemIndex);
-      break;
     }
 
-    _removeTracks(item.tracks, path);
-    _removePaths(item.paths, item.data, path);
-
-    var last = path.pop();
-    data = item.data[CollectionStore.pathToKey(path)];
-    if (!data || !data.keys) {
-      break;
+    function _removePaths(paths, data, path) {
+      var i = 0;
+      while (i < paths.length) {
+        if (_isPathPrefix(paths[i], path)) {
+          delete data[CollectionStore.pathToKey(paths[i])];
+          paths.splice(i, 1);
+          continue;
+        }
+        i++;
+      }
     }
-    data.keys.splice(data.keys.indexOf(last), 1);
-  } while(data.keys.length === 0 && path.length > 1);
 
-  setPlaylistCurrent(null);
-  setPlaylistItems(items);
-}
-
-function setCurrent(itemIndex, path) {
-  var item = getPlaylistItem(itemIndex);
-  var key = CollectionStore.pathToKey(path);
-
-  var track = -1;
-  for (var i = 0; i < item.tracks.length; i++) {
-    if (CollectionStore.pathToKey(item.root.concat(item.tracks[i])) === key) {
-      track = i;
-      break;
+    function _removeItem(items, itemIndex) {
+      items.splice(itemIndex, 1);
     }
-  }
-  if (track === -1) {
-    console.error("Could not find track for path:"+path);
-  }
 
-  setPlaylistCurrent({
-    item: itemIndex,
-    path: path,
-    track: track,
-  });
-}
+    var items = this.getPlaylistItems();
+    var item = items[itemIndex];
 
-function trackForPath(path) {
-  var i = path.pop();
-  var t = CollectionStore.getCollection(path);
-  if (t === null) {
-    console.log("Could not find collection with path:"+path);
+    var data;
+    do {
+      if (_pathsEqual(path, item.root)) {
+        _removeItem(items, itemIndex);
+        break;
+      }
+
+      _removeTracks(item.tracks, path);
+      _removePaths(item.paths, item.data, path);
+
+      var last = path.pop();
+      data = item.data[CollectionStore.pathToKey(path)];
+      if (!data || !data.keys) {
+        break;
+      }
+      data.keys.splice(data.keys.indexOf(last), 1);
+    } while(data.keys.length === 0 && path.length > 1);
+
+    this.setPlaylistCurrent(null);
+    this.setPlaylistItems(items);
   }
 
-  if (t.Tracks) {
-    var track = t.Tracks[i];
-    if (track) {
-      return track;
+  setCurrent(itemIndex, path) {
+    var item = this.getPlaylistItem(itemIndex);
+    var key = CollectionStore.pathToKey(path);
+
+    var track = -1;
+    for (var i = 0; i < item.tracks.length; i++) {
+      if (CollectionStore.pathToKey(item.root.concat(item.tracks[i])) === key) {
+        track = i;
+        break;
+      }
     }
-    console.log("No track found for index: "+i);
-    console.log(t.Tracks);
+    if (track === -1) {
+      console.error("Could not find track for path:"+path);
+    }
+
+    this.setPlaylistCurrent({
+      item: itemIndex,
+      path: path,
+      track: track,
+    });
+  }
+
+  trackForPath(path) {
+    var i = path.pop();
+    var t = CollectionStore.getCollection(path);
+    if (t === null) {
+      console.log("Could not find collection with path:"+path);
+    }
+
+    if (t.Tracks) {
+      var track = t.Tracks[i];
+      if (track) {
+        return track;
+      }
+      console.log("No track found for index: "+i);
+      console.log(t.Tracks);
+      return null;
+    }
+
+    console.log("Collection item did not have Tracks property");
     return null;
   }
 
-  console.log("Collection item did not have Tracks property");
-  return null;
+  currentTrack() {
+    var current = this.getPlaylistCurrent();
+    if (current === null) {
+      return null;
+    }
+    return this.trackForPath(current.path.slice(0));
+  }
 }
 
-function currentTrack() {
-  var current = getPlaylistCurrent();
-  if (current === null) {
-    return null;
-  }
-  return trackForPath(current.path.slice(0));
-}
+var playlist = new Playlist();
 
 var PlaylistStore = assign({}, EventEmitter.prototype, {
 
   getPlaylist: function() {
-    return getPlaylistItems();
+    return playlist.getPlaylistItems();
   },
 
   getCurrent: function() {
-    return getPlaylistCurrent();
+    return playlist.getPlaylistCurrent();
   },
 
   getCurrentTrack: function() {
-    return currentTrack();
+    return playlist.currentTrack();
   },
 
   canPrev: function() {
-    return canPrev();
+    return playlist.canPrev();
   },
 
   canNext: function() {
-    return canNext();
+    return playlist.canNext();
   },
 
   getNext: function() {
-    return getNext();
+    return playlist.getNext();
   },
 
   getItemKeys: function(index, path) {
-    var item = getPlaylistItem(index);
+    var item = playlist.getPlaylistItem(index);
     var key = CollectionStore.pathToKey(path);
     return item.data[key];
   },
@@ -386,12 +392,12 @@ PlaylistStore.dispatchToken = AppDispatcher.register(function(payload) {
     if (action.actionType === ControlConstants.CTRL) {
       switch (action.data) {
         case ControlConstants.NEXT:
-          next();
+          playlist.next();
           PlaylistStore.emitChange();
           break;
 
         case ControlConstants.PREV:
-          prev();
+          playlist.prev();
           PlaylistStore.emitChange();
           break;
       }
@@ -408,37 +414,37 @@ PlaylistStore.dispatchToken = AppDispatcher.register(function(payload) {
         }
         /* falls through */
       case PlaylistConstants.NEXT:
-        next();
+        playlist.next();
         PlaylistStore.emitChange();
         break;
 
       case PlaylistConstants.PREV:
-        prev();
+        playlist.prev();
         PlaylistStore.emitChange();
         break;
 
       case PlaylistConstants.REMOVE:
-        remove(action.itemIndex, action.path);
+        playlist.remove(action.itemIndex, action.path);
         PlaylistStore.emitChange();
         break;
 
       case CollectionConstants.APPEND_TO_PLAYLIST:
-        items = getPlaylistItems();
+        items = playlist.getPlaylistItems();
         items.push(buildPlaylistItem(action.path));
-        setPlaylistItems(items);
+        playlist.setPlaylistItems(items);
         PlaylistStore.emitChange();
         break;
 
       case CollectionConstants.PLAY_NOW:
-        items = getPlaylistItems();
+        items = playlist.getPlaylistItems();
         items.unshift(buildPlaylistItem(action.path));
-        setPlaylistItems(items);
-        reset();
+        playlist.setPlaylistItems(items);
+        playlist.reset();
         PlaylistStore.emitChange();
         break;
 
       case PlaylistConstants.PLAY_ITEM:
-        setCurrent(action.itemIndex, action.path);
+        playlist.setCurrent(action.itemIndex, action.path);
         PlaylistStore.emitChange();
         break;
 
