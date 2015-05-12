@@ -329,40 +329,40 @@ class Playlist {
   }
 }
 
-var playlist = new Playlist();
-
 class PlaylistStore extends EventEmitter {
-  constructor() {
+  constructor(playlist) {
     super();
+
+    this.playlist = playlist;
     this.dispatchToken = AppDispatcher.register(this.handleDispatch.bind(this));
   }
 
   getPlaylist() {
-    return playlist.getPlaylistItems();
+    return this.playlist.getPlaylistItems();
   }
 
   getCurrent() {
-    return playlist.getPlaylistCurrent();
+    return this.playlist.getPlaylistCurrent();
   }
 
   getCurrentTrack() {
-    return playlist.currentTrack();
+    return this.playlist.currentTrack();
   }
 
   canPrev() {
-    return playlist.canPrev();
+    return this.playlist.canPrev();
   }
 
   canNext() {
-    return playlist.canNext();
+    return this.playlist.canNext();
   }
 
   getNext() {
-    return playlist.getNext();
+    return this.playlist.getNext();
   }
 
   getItemKeys(index, path) {
-    var item = playlist.getPlaylistItem(index);
+    var item = this.playlist.getPlaylistItem(index);
     var key = CollectionStore.pathToKey(path);
     return item.data[key];
   }
@@ -404,12 +404,12 @@ class PlaylistStore extends EventEmitter {
     if (action.actionType === ControlConstants.CTRL) {
       switch (action.data) {
         case ControlConstants.NEXT:
-          playlist.next();
+          this.playlist.next();
           PlaylistStore.emitChange();
           break;
 
         case ControlConstants.PREV:
-          playlist.prev();
+          this.playlist.prev();
           PlaylistStore.emitChange();
           break;
       }
@@ -426,37 +426,37 @@ class PlaylistStore extends EventEmitter {
         }
         /* falls through */
       case PlaylistConstants.NEXT:
-        playlist.next();
+        this.playlist.next();
         this.emitChange();
         break;
 
       case PlaylistConstants.PREV:
-        playlist.prev();
+        this.playlist.prev();
         this.emitChange();
         break;
 
       case PlaylistConstants.REMOVE:
-        playlist.remove(action.itemIndex, action.path);
+        this.playlist.remove(action.itemIndex, action.path);
         this.emitChange();
         break;
 
       case CollectionConstants.APPEND_TO_PLAYLIST:
-        items = playlist.getPlaylistItems();
+        items = this.playlist.getPlaylistItems();
         items.push(buildPlaylistItem(action.path));
-        playlist.setPlaylistItems(items);
+        this.playlist.setPlaylistItems(items);
         this.emitChange();
         break;
 
       case CollectionConstants.PLAY_NOW:
-        items = playlist.getPlaylistItems();
+        items = this.playlist.getPlaylistItems();
         items.unshift(buildPlaylistItem(action.path));
-        playlist.setPlaylistItems(items);
-        playlist.reset();
+        this.playlist.setPlaylistItems(items);
+        this.playlist.reset();
         this.emitChange();
         break;
 
       case PlaylistConstants.PLAY_ITEM:
-        playlist.setCurrent(action.itemIndex, action.path);
+        this.playlist.setCurrent(action.itemIndex, action.path);
         this.emitChange();
         break;
 
@@ -466,4 +466,4 @@ class PlaylistStore extends EventEmitter {
   }
 }
 
-export default new PlaylistStore();
+export default new PlaylistStore(new Playlist());
