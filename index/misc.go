@@ -299,3 +299,25 @@ func FirstTrackAttr(attr Attr, g Group) Group {
 	}
 	return fieldsGroup(m, g)
 }
+
+// AllTrackAttr wraps the given Group, adding the striend field `field` if and
+// only if all tracks within the group share the same attribute.
+func AllTrackAttr(attr Attr, g Group) Group {
+	var initialValue interface{};
+
+	for i, t := range g.Tracks() {
+		if i == 0 {
+			initialValue = attr.fn(t)
+		}
+		if initialValue != attr.fn(t) {
+			// There is a value that is different, so we can't set the common attribute.
+			// Might as well bail out, as there is no point continuing.
+			return g
+		}
+	}
+
+	m := map[string]interface{}{
+		attr.field: initialValue,
+	}
+	return fieldsGroup(m, g)
+}
